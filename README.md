@@ -55,26 +55,68 @@ A feature-rich Discord bot with ticket system, moderation tools, security featur
 
 ## Setup
 
-1. **Clone the Repository**
+### Prerequisites
+- Python 3.8+
+- Git
+- Discord Bot Token
+
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/yourusername/DiscordBot.git
 cd DiscordBot
 ```
 
-2. **Install Dependencies**
+### 2. Easy Installation
+```bash
+python setup.py
+```
+
+The setup script will:
+- Create a virtual environment
+- Install dependencies
+- Guide you through bot configuration
+- Generate a secure `.env` file
+
+### 3. Run the Bot
+```bash
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+
+# On macOS/Linux:
+source venv/bin/activate
+
+# Run the bot
+python run.py
+```
+
+## 🔧 Manual Setup (Alternative)
+
+1. Create a virtual environment
+```bash
+python -m venv venv
+```
+
+2. Activate the virtual environment
+```bash
+# Windows
+venv\Scripts\activate
+
+# macOS/Linux
+source venv/bin/activate
+```
+
+3. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Configure Environment Variables**
-Create a `.env` file in the root directory:
-```env
-DISCORD_TOKEN=your_bot_token_here
-ENCRYPTION_KEY=your_secure_encryption_key  # Optional
-GUILD_ID=your_guild_id  # Optional
+4. Copy `.env.template` to `.env` and fill in your details
+```bash
+cp .env.template .env
 ```
 
-4. **Run the Bot**
+5. Run the bot
 ```bash
 python run.py
 ```

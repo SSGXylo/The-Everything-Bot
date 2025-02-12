@@ -1,91 +1,58 @@
 """
-Configuration management for the Discord Ticket Bot.
+Centralized configuration management for The Everything Bot.
+Loads settings from environment variables with sensible defaults.
 """
 import os
-import secrets
 from dotenv import load_dotenv
-from pathlib import Path
 
 # Load environment variables
 load_dotenv()
 
-# Security Settings
-ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY") or secrets.token_hex(32)
-MAX_TICKETS_PER_USER = 50
-TICKET_CLEANUP_DAYS = 30
-REQUIRED_PERMISSIONS = [
-    "manage_channels",
-    "manage_roles",
-    "view_channel",
-    "send_messages",
-    "manage_messages",
-    "embed_links",
-    "attach_files",
-    "read_message_history",
-    "add_reactions"
-]
-
-# Rate Limiting
-RATE_LIMITS = {
-    "ticket_create": (3, 3600),    # 3 tickets per hour
-    "ticket_close": (10, 3600),    # 10 closes per hour
-    "command_global": (30, 60),    # 30 commands per minute
+# Color palette for embeds and UI
+COLORS = {
+    "primary": 0x3498db,   # Blue
+    "success": 0x2ecc71,   # Green
+    "warning": 0xf39c12,   # Orange
+    "error": 0xe74c3c,     # Red
+    "info": 0x9b59b6       # Purple
 }
 
 # Bot Configuration
-COMMAND_PREFIX = "!"
-BOT_TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD_ID = os.getenv("GUILD_ID")
+BOT_TOKEN = os.getenv('DISCORD_TOKEN')
+COMMAND_PREFIX = os.getenv('BOT_PREFIX', '/')
+BOT_ACTIVITY = os.getenv('BOT_ACTIVITY', 'Helping servers!')
 
-# Ensure bot token is set
-if not BOT_TOKEN:
-    raise ValueError("DISCORD_TOKEN must be set in .env file")
-
-# Ticket Configuration
-TICKET_CATEGORY_NAME = "Tickets"
-TICKETS_FILE = Path("data/tickets.json")
-LOGS_DIR = Path("logs")
-SUPPORT_ROLE_NAME = "Support Team"
-
-# File paths and directories
-DATA_DIR = Path("data")
-BACKUP_DIR = DATA_DIR / "backups"
-
-# Ensure required directories exist
-for directory in [DATA_DIR, BACKUP_DIR, LOGS_DIR]:
-    directory.mkdir(parents=True, exist_ok=True)
-
-# Embed Colors
-COLORS = {
-    "primary": 0x3498db,    # Blue
-    "success": 0x2ecc71,    # Green
-    "warning": 0xf1c40f,    # Yellow
-    "error": 0xe74c3c,      # Red
-    "info": 0x95a5a6,       # Gray
-}
-
-# Message Templates
-TICKET_CREATED_MESSAGE = """
-Welcome to your support ticket!
-Please describe your issue and a member of our support team will assist you shortly.
-
-To help us serve you better, please provide:
-• A clear description of your issue
-• Any relevant screenshots or information
-• Steps to reproduce (if applicable)
-
-Note: This conversation will be logged for support purposes.
-"""
-
-TICKET_CLOSED_MESSAGE = "This ticket will be closed in 5 seconds..."
+# Security Settings
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY', 'auto_generate')
+ALLOWED_GUILDS = [int(guild) for guild in os.getenv('ALLOWED_GUILDS', '').split(',') if guild]
 
 # Logging Configuration
-LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-LOG_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
-MAX_LOG_SIZE = 10 * 1024 * 1024  # 10MB
-LOG_BACKUP_COUNT = 5
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+LOG_FILE = os.getenv('LOG_FILE', 'logs/bot.log')
 
-# Validation
-MAX_TICKET_SUBJECT_LENGTH = 100
-MAX_TICKET_CONTENT_LENGTH = 2000
-ALLOWED_FILE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.txt', '.pdf'}
+# Feature Toggles
+LEVELING_ENABLED = os.getenv('LEVELING_ENABLED', 'true').lower() == 'true'
+WELCOME_SYSTEM_ENABLED = os.getenv('WELCOME_SYSTEM_ENABLED', 'true').lower() == 'true'
+
+# Moderation Settings
+DEFAULT_MUTE_ROLE = os.getenv('DEFAULT_MUTE_ROLE')
+MODERATION_LOGS_CHANNEL = os.getenv('MODERATION_LOGS_CHANNEL')
+
+# Ticket System Settings
+TICKET_CATEGORY = os.getenv('TICKET_CATEGORY')
+TICKET_SUPPORT_ROLE = os.getenv('TICKET_SUPPORT_ROLE')
+
+# Validate critical configurations
+def validate_config():
+    """Validate critical bot configurations."""
+    errors = []
+    
+    if not BOT_TOKEN:
+        errors.append("Discord bot token is missing")
+    
+    return errors
+
+# Optional: Validate on import
+config_errors = validate_config()
+if config_errors:
+    raise ValueError(f"Configuration errors: {', '.join(config_errors)}")
