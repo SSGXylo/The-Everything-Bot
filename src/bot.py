@@ -1,133 +1,105 @@
+import os
+import sys
+import logging
+import asyncio
+import traceback
+
 import discord
 from discord.ext import commands
 from discord import app_commands
-import os
 from dotenv import load_dotenv
-import json
-from datetime import datetime
 
-# Load environment variables
-load_dotenv()
+# Add project root to path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, project_root)
+
+# Import configuration
+from src.config import (
+    BOT_TOKEN, 
+    COMMAND_PREFIX, 
+    BOT_ACTIVITY, 
+    LOG_LEVEL, 
+    LOG_FILE
+)
+
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL.upper()),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger('bot')
 
 # Bot configuration
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-bot = commands.Bot(command_prefix='!', intents=intents)
-
-# Ticket data structure
-TICKETS_FILE = 'tickets.json'
-
-def load_tickets():
-    if os.path.exists(TICKETS_FILE):
-        with open(TICKETS_FILE, 'r') as f:
-            return json.load(f)
-    return {}
-
-def save_tickets(tickets):
-    with open(TICKETS_FILE, 'w') as f:
-        json.dump(tickets, f, indent=4)
-
-tickets = load_tickets()
-
-@bot.event
-async def on_ready():
-    print(f'{bot.user} has connected to Discord!')
-    try:
-        synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} command(s)")
-    except Exception as e:
-        print(f"Failed to sync commands: {e}")
-
-class TicketView(discord.ui.View):
+class TheEverythingBot(commands.Bot):
     def __init__(self):
-        super().__init__(timeout=None)
-
-    @discord.ui.button(label="Create Ticket", style=discord.ButtonStyle.green, custom_id="create_ticket")
-    async def create_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Check if user already has an open ticket
-        for ticket_id, ticket_info in tickets.items():
-            if ticket_info["user_id"] == interaction.user.id and not ticket_info["closed"]:
-                await interaction.response.send_message("You already have an open ticket!", ephemeral=True)
-                return
-
-        # Create new ticket channel
-        guild = interaction.guild
-        category = discord.utils.get(guild.categories, name="Tickets")
-        
-        if not category:
-            category = await guild.create_category("Tickets")
-
-        ticket_number = len(tickets) + 1
-        channel_name = f"ticket-{ticket_number}"
-        
-        # Set permissions for the ticket channel
-        overwrites = {
-            guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
-            guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True)
-        }
-
-        channel = await category.create_text_channel(channel_name, overwrites=overwrites)
-        
-        # Store ticket information
-        tickets[str(ticket_number)] = {
-            "channel_id": channel.id,
-            "user_id": interaction.user.id,
-            "created_at": datetime.now().isoformat(),
-            "closed": False
-        }
-        save_tickets(tickets)
-
-        # Send initial message in ticket channel
-        embed = discord.Embed(
-            title=f"Ticket #{ticket_number}",
-            description="Support will be with you shortly. Please describe your issue.",
-            color=discord.Color.green()
+        super().__init__(
+            command_prefix=COMMAND_PREFIX, 
+            intents=intents,
+            help_command=commands.DefaultHelpCommand()
         )
-        embed.set_footer(text=f"Opened by {interaction.user.name}")
-        
-        close_view = TicketCloseView()
-        await channel.send(embed=embed, view=close_view)
-        
-        await interaction.response.send_message(f"Created ticket channel: {channel.mention}", ephemeral=True)
+        self.initial_extensions = [
+            'src.cogs.leveling',
+            'src.cogs.welcome',
+            'src.cogs.moderation',
+            'src.cogs.security',
+            'src.cogs.tickets',
+            'src.cogs.games'
+        ]
 
-class TicketCloseView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
+    async def setup_hook(self):
+        """Set up bot extensions and sync commands."""
+        # Load extensions
+        for ext in self.initial_extensions:
+            try:
+                await self.load_extension(ext)
+                logger.info(f"Loaded extension {ext}")
+            except Exception as e:
+                logger.error(f"Failed to load extension {ext}: {e}")
+                traceback.print_exc()
 
-    @discord.ui.button(label="Close Ticket", style=discord.ButtonStyle.red, custom_id="close_ticket")
-    async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-        channel = interaction.channel
-        
-        # Find ticket number
-        ticket_number = None
-        for num, info in tickets.items():
-            if info["channel_id"] == channel.id:
-                ticket_number = num
-                break
-        
-        if ticket_number:
-            tickets[ticket_number]["closed"] = True
-            save_tickets(tickets)
-            
-            await channel.send("This ticket will be closed in 5 seconds...")
-            await discord.asyncio.sleep(5)
-            await channel.delete()
+        # Sync application commands
+        try:
+            synced = await self.tree.sync()
+            logger.info(f"Synced {len(synced)} application commands")
+        except Exception as e:
+            logger.error(f"Failed to sync commands: {e}")
 
-@bot.tree.command(name="setup", description="Setup the ticket system")
-@app_commands.default_permissions(administrator=True)
-async def setup(interaction: discord.Interaction):
-    embed = discord.Embed(
-        title="🎫 Support Ticket System",
-        description="Click the button below to create a support ticket",
-        color=discord.Color.blue()
-    )
+    async def on_ready(self):
+        """Called when the bot is ready."""
+        logger.info(f'{self.user} has connected to Discord!')
+        
+        # Set bot activity
+        activity = discord.Activity(
+            type=discord.ActivityType.watching, 
+            name=BOT_ACTIVITY
+        )
+        await self.change_presence(activity=activity)
+
+def main():
+    """Main bot initialization and run method."""
+    # Validate token
+    if not BOT_TOKEN:
+        logger.critical("No Discord token found. Please set DISCORD_TOKEN in .env")
+        sys.exit(1)
+
+    # Initialize and run bot
+    bot = TheEverythingBot()
     
-    view = TicketView()
-    await interaction.channel.send(embed=embed, view=view)
-    await interaction.response.send_message("Ticket system has been set up!", ephemeral=True)
+    try:
+        asyncio.run(bot.start(BOT_TOKEN))
+    except KeyboardInterrupt:
+        asyncio.run(bot.close())
+    except Exception as e:
+        logger.critical(f"Unhandled exception: {e}")
+        traceback.print_exc()
 
-# Run the bot
-bot.run(os.getenv('DISCORD_TOKEN'))
+if __name__ == '__main__':
+    main()
