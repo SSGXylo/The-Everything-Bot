@@ -1,54 +1,179 @@
-# Discord Ticket Bot
+# Discord Multi-Purpose Bot
 
-A Discord bot that implements a ticket system for support requests.
+A feature-rich Discord bot with ticket system, moderation tools, security features, mini-games, welcome system, and leveling.
 
 ## Features
 
-- Create support tickets with a button click
-- Automatically creates private channels for each ticket
-- Close tickets when resolved
-- Prevents users from creating multiple open tickets
-- Administrators can set up the ticket system in any channel
+### 🎫 Ticket System
+- Create and manage support tickets
+- Private channels for each ticket
+- Ticket tracking and logging
+- Support team integration
 
-## Setup Instructions
+### 🛡️ Moderation Commands
+- `/kick` - Kick members with logging
+- `/ban` - Ban members with optional message deletion
+- `/mute` - Timeout members for specified duration
+- `/unmute` - Remove timeout from members
+- `/warn` - Issue warnings to members
 
-1. Install the required dependencies:
+### 🔒 Security Features
+- Anti-spam protection
+- Anti-raid measures
+- Server nuke prevention
+- Automatic moderation actions
+- Detailed security logging
+
+### 🎮 Mini-Games
+1. **Rock Paper Scissors** (`/rps`)
+   - Play against the bot
+   - Interactive button interface
+   
+2. **Number Guessing** (`/guess`)
+   - Guess numbers with hints
+   - Customizable range
+   - Multiple attempts
+
+3. **Trivia** (`/trivia`)
+   - Multiple-choice questions
+   - Various topics
+   - Score tracking
+
+### 👋 Welcome System
+- Customizable welcome messages
+- Auto-role assignment
+- Welcome message testing
+- Supports member mentions and server variables
+
+### ⭐ Leveling System
+- Experience (XP) tracking
+- Level-up notifications
+- Role rewards
+- Server leaderboard
+- Customizable XP rates
+- Anti-spam measures
+
+## Setup
+
+1. **Clone the Repository**
+```bash
+git clone https://github.com/yourusername/DiscordBot.git
+cd DiscordBot
+```
+
+2. **Install Dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Configure the bot:
-   - Create a new Discord application and bot at https://discord.com/developers/applications
-   - Copy your bot token
-   - Replace "your_bot_token_here" in the `.env` file with your actual bot token
-
-3. Invite the bot to your server with the following permissions:
-   - Manage Channels
-   - View Channels
-   - Send Messages
-   - Manage Messages
-   - Read Message History
-   - Add Reactions
-   - Use Slash Commands
-
-4. Run the bot:
-```bash
-python bot.py
+3. **Configure Environment Variables**
+Create a `.env` file in the root directory:
+```env
+DISCORD_TOKEN=your_bot_token_here
+ENCRYPTION_KEY=your_secure_encryption_key  # Optional
+GUILD_ID=your_guild_id  # Optional
 ```
 
-5. Use the `/setup` command in your server to create the ticket system
+4. **Run the Bot**
+```bash
+python run.py
+```
 
-## Usage
+## Required Permissions
 
-1. Users can create tickets by clicking the "Create Ticket" button
-2. A private channel will be created for the ticket
-3. Support staff can communicate with the user in the ticket channel
-4. Use the "Close Ticket" button to close and delete the ticket when resolved
+The bot requires the following permissions:
+- Manage Channels
+- Manage Roles
+- Kick Members
+- Ban Members
+- Moderate Members
+- View Channels
+- Send Messages
+- Manage Messages
+- Read Message History
+- Add Reactions
 
-## Note
+## Bot Commands
 
-Make sure the bot has the necessary permissions in your server to:
-- Create channels and categories
-- Manage channel permissions
-- Send messages and embeds
-- Use slash commands
+### Ticket Commands
+- `/setup` - Set up the ticket system
+- `/stats` - View ticket statistics
+- `/mytickets` - View your ticket history
+
+### Moderation Commands
+- `/kick @user [reason]` - Kick a member
+- `/ban @user [reason] [delete_days]` - Ban a member
+- `/mute @user [duration] [reason]` - Mute a member
+- `/unmute @user` - Unmute a member
+- `/warn @user [reason]` - Warn a member
+
+### Game Commands
+- `/rps` - Play Rock Paper Scissors
+- `/guess [max_number]` - Play Number Guessing
+- `/trivia` - Play Trivia
+
+### Welcome Commands
+- `/welcome_setup` - Configure welcome messages and auto-role
+- `/welcome_test` - Test the welcome message
+
+### Leveling Commands
+- `/rank [member]` - View your or another member's rank
+- `/leaderboard` - Display the XP leaderboard
+- `/levelconfig` - Configure the leveling system
+- `/addrole_reward` - Add role rewards for levels
+
+### Security Commands
+- `/anti_nuke_settings` - View security settings
+
+## Project Structure
+```
+DiscordBot/
+├── src/
+│   ├── __init__.py
+│   ├── bot.py
+│   ├── config.py
+│   ├── cogs/
+│   │   ├── tickets.py
+│   │   ├── moderation.py
+│   │   ├── security.py
+│   │   ├── games.py
+│   │   ├── welcome.py
+│   │   └── leveling.py
+│   ├── utils/
+│   │   ├── logger.py
+│   │   ├── security.py
+│   │   └── encryption.py
+│   └── views/
+│       └── ticket_views.py
+├── data/
+├── logs/
+├── requirements.txt
+├── run.py
+└── README.md
+```
+
+## Security Features
+
+- Encrypted data storage
+- Rate limiting
+- Role hierarchy checks
+- Permission validation
+- Anti-spam measures
+- Raid protection
+- Detailed logging
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+If you encounter any issues or have questions, please open an issue on GitHub.
